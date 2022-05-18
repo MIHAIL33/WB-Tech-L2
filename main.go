@@ -27,5 +27,19 @@ func main() {
 
 	//Visitor pattern
 	fmt.Println("///////////////////////////////Visitor")
+	square := &pattern.Square{ Side: 2 }
+	circle := &pattern.Circle{ Radius: 3 }
+	rectangle := &pattern.Rectangle{ Height: 3, Width: 4 }
 
+	areaCalculator := &pattern.AreaCalculator{}
+	square.Accept(areaCalculator)
+	fmt.Println(areaCalculator.Area)
+	circle.Accept(areaCalculator)
+	fmt.Println(areaCalculator.Area)
+	rectangle.Accept(areaCalculator)
+	fmt.Println(areaCalculator.Area)
+
+	//Command pattern
+	fmt.Println("///////////////////////////////Command")
+	
 }
