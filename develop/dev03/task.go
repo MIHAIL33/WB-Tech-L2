@@ -115,7 +115,7 @@ func main() {
 
 	nFlag := flag.Bool("n", false, "sort by numeric value")
 	rFlag := flag.Bool("r", false, "sort in reverse order")
-	uFlag := flag.Bool("u", false, "do not output duplicate lines")
+	uFlag := flag.Bool("u", false,  "do not output duplicate lines")
 	flag.Parse()
 
 	fileName := flag.Arg(0)
