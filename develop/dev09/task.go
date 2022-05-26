@@ -23,7 +23,8 @@ import (
 Программа должна проходить все тесты. Код должен проходить проверки go vet и golint.
 */
 
-func CheckUrl(url string) bool {
+//CheckURL - checks if path belongs to site
+func CheckURL(url string) bool {
 	if url != "" {
 		runes := []rune(url)
 		return runes[0] == '/'
@@ -31,13 +32,13 @@ func CheckUrl(url string) bool {
 	return false
 }
 
-
+//CreateFile - creates a file and all folders along the way
 func CreateFile(path string, body io.Reader) error {
 	parts := strings.Split(path, "/")
 	var tempPath string
-	var lenPath int = len(parts)
+	var lenPath = len(parts)
 	for i, val := range parts {
-
+		// create paths
 		if i == 0 {
 			tempPath = val
 		} else {
@@ -52,6 +53,7 @@ func CreateFile(path string, body io.Reader) error {
 				}
 			}
 		} else {
+			// create file
 			file, err := os.Create(path)
 			if err != nil {
 				return err
@@ -68,24 +70,28 @@ func CreateFile(path string, body io.Reader) error {
 	return nil
 }
 
-
+//DownloadSite - downloads the site
 func DownloadSite(url string, path string) error {
 
 	fmt.Println("Downloading ", url, " to ", path)
 
-	urlWithoutDomain, err := ParseUrl(url, false)
+	// get path, for example - /domain1/domain2
+	urlWithoutDomain, err := ParseURL(url, false)
 	if err != nil {
 		return err
 	}
 
-	domain, err := ParseUrl(url, true)
+	// get domain, for example - https://domain.com
+	domain, err := ParseURL(url, true)
 	if err != nil {
 		return err
 	} 
 
+	// map contains all paths (in the end)
 	mapPath := make(map[string]bool)
 	mapPath[urlWithoutDomain] = false
 
+	// download
 	_, err = DownloadPages(domain, path, urlWithoutDomain, mapPath)
 	if err != nil {
 		return err
@@ -94,9 +100,10 @@ func DownloadSite(url string, path string) error {
 	return nil
 }
 
-
+//DownloadPages - downloads all pages (recursion)
 func DownloadPages(url, path, urlWithoutDomain string, mapPath map[string]bool) (map[string]bool, error) {
 
+	//page is loading (no repeat)
 	mapPath[urlWithoutDomain] = true
 
 	client := http.Client{}
@@ -113,6 +120,7 @@ func DownloadPages(url, path, urlWithoutDomain string, mapPath map[string]bool) 
 
 	body, _ := ioutil.ReadAll(response.Body)
 
+	// save page to file
 	if urlWithoutDomain == "/" {
 		err = CreateFile(path + urlWithoutDomain + "index.html", bytes.NewBuffer(body))
 	} else {
@@ -122,8 +130,10 @@ func DownloadPages(url, path, urlWithoutDomain string, mapPath map[string]bool) 
 		return nil, err
 	}
 
+	// parse page and get links from page
 	mapPath = GetLinks(bytes.NewBuffer(body), mapPath)
 	
+	// call recursion
 	for k := range mapPath {
 		if !mapPath[k] {
 			mapPath, err = DownloadPages(url, path, k, mapPath)
@@ -136,7 +146,7 @@ func DownloadPages(url, path, urlWithoutDomain string, mapPath map[string]bool) 
 	return mapPath, nil
 }
 
-
+//GetLinks - parse body of page (get tag "a -> href")
 func GetLinks(body io.Reader, mapPath map[string]bool) map[string]bool {
 	z := html.NewTokenizer(body)
 	for {
@@ -149,7 +159,7 @@ func GetLinks(body io.Reader, mapPath map[string]bool) map[string]bool {
 			if token.Data == "a" {
 				for _, attr := range token.Attr {
 					if attr.Key == "href" {
-						if CheckUrl(attr.Val) && !mapPath[attr.Val] {
+						if CheckURL(attr.Val) && !mapPath[attr.Val] {
 							mapPath[attr.Val] = false
 						}
 					}
@@ -159,28 +169,30 @@ func GetLinks(body io.Reader, mapPath map[string]bool) map[string]bool {
 	}
 }
 
-func ParseUrl(url string, domain bool) (string, error) {
+//ParseURL - parse url  
+func ParseURL(url string, domain bool) (string, error) {
 	if url == "" { return "", errors.New("bad url") }
-	var localUrl string = ""
+	var localURL = ""
 	splitFn := func(c rune) bool {
 		return c == '/'
 	}
 	parts := strings.FieldsFunc(url, splitFn)
+	// first variant - get domain, for example: http://domain.com
 	if domain {
-		localUrl = parts[0] + "//" + parts[1]
-		return localUrl, nil
-	} else {
-		if len(parts) > 2 {
-			for i := 2; i < len(parts); i++ {
-				localUrl = localUrl + "/" + parts[i]
-			}
-			return localUrl, nil
-		} else {
-			return "/", nil
-		}
+		localURL = parts[0] + "//" + parts[1]
+		return localURL, nil
 	}
+	// second variant - get local path, for example: /domain1/domain2
+	if len(parts) > 2 {
+		for i := 2; i < len(parts); i++ {
+			localURL = localURL + "/" + parts[i]
+		}
+		return localURL, nil
+	} 
+	return "/", nil
 }
 
+//DownloadFile - downloads one file or page
 func DownloadFile(url string, path string) error {
 	client := http.Client{}
 	req, _ := http.NewRequest("GET", url, nil)
@@ -220,8 +232,9 @@ func main() {
 		return
 	}
 
+	// check "mirror" flag
 	if *mFlag {
-		pathLocal, err := ParseUrl(url, true)
+		pathLocal, err := ParseURL(url, true)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error: bad URL!\n")
 		}
