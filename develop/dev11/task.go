@@ -22,6 +22,21 @@ package main
 	4. Код должен проходить проверки go vet и golint.
 */
 
+import (
+	"log"
+
+	"github.com/MIHAIL33/WB-TECH-L2/develop/dev11/pkg/calendar"
+	"github.com/MIHAIL33/WB-TECH-L2/develop/dev11/pkg/server"
+) 
+
 func main() {
+
+	calendar.NewHandler()
+
+	srv := new(server.Server)
+	err := srv.Run("8000")
+	if err != nil {
+		log.Fatal(err)
+	}
 
 }
