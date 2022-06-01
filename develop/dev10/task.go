@@ -40,6 +40,7 @@ func Scanner(conn net.Conn, wg *sync.WaitGroup) {
 		}
 	}
 	defer conn.Close() // if ctrl + D
+	
 }
 
 //Reader - read from net.Conn and write to Stdout
