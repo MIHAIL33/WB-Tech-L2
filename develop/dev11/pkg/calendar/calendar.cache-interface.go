@@ -4,6 +4,7 @@ type CalendarCacheInterface interface {
 	CreateEvent (event Event) (*Event, error)
 	UpdateEvent (event Event) (*Event, error)
 	DeleteEvent (id int) (*Event, error)
+	GetEventById (id int) (*Event, error)
 
 	GetEventsForDay() (*[]Event, error)
 	GetEventsForMonth() (*[]Event, error)

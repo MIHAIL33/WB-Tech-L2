@@ -1,6 +1,9 @@
 package calendar
 
-import "fmt"
+import (
+	"errors"
+	"strconv"
+)
 
 type CalendarService struct {
 	ch *Cache
@@ -13,10 +16,17 @@ func NewCalendarService() *CalendarService {
 }
 
 func (cs *CalendarService) CreateEvent(event Event) (*Event, error) {
-	fmt.Println("Service")
-	cs.ch.CreateEvent(event)
+	eventExist, _ := cs.ch.GetEventById(event.Id)
+	if eventExist != nil {
+		return nil, errors.New("event with id = " + strconv.Itoa(event.Id) + " already exist")
+	}
 
-	return nil, nil
+	newEvent, err := cs.ch.CreateEvent(event)
+	if err != nil {
+		return nil, err
+	}
+
+	return newEvent, nil
 }
 
 func (cs *CalendarService) UpdateEvent(event Event) (*Event, error) {
