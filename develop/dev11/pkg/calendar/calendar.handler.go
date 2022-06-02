@@ -3,8 +3,10 @@ package calendar
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/MIHAIL33/WB-TECH-L2/develop/dev11/common"
@@ -30,6 +32,27 @@ func (h *Handler) CreateEvent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSONResult(w, *event)
+
+}
+
+func (h *Handler) GetByIdEvent(w http.ResponseWriter, r *http.Request) {
+
+	if r.Method != http.MethodGet {
+		writeJSONError(w, common.ErrorResponse{StatusCode: http.StatusMethodNotAllowed, Message: "Allow: GET"})
+		return
+	}
+
+	raw := r.URL.Query()["id"]
+	if len(raw) == 0 {
+		writeJSONError(w, common.ErrorResponse{StatusCode: http.StatusBadRequest, Message: "param id is not found"})
+		return
+	}
+	id, err := strconv.Atoi(raw[0])
+	if err != nil {
+		writeJSONError(w, common.ErrorResponse{StatusCode: http.StatusBadRequest, Message: "id must be a number"})
+		return
+	}
+	fmt.Println(id)
 
 }
 
