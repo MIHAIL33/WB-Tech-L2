@@ -118,6 +118,20 @@ func (h *Handler) GetEventsForDay(w http.ResponseWriter, r *http.Request) {
 		writeJSONError(w, common.ErrorResponse{StatusCode: http.StatusMethodNotAllowed, Message: "Allow: GET"})
 		return
 	}
+
+	dateByUserId, err := parseDateAndId(r)
+	if err != nil {
+		writeJSONError(w, common.ErrorResponse{StatusCode: http.StatusBadRequest, Message: err.Error()})
+		return
+	}
+
+	events, err := h.service.GetEventsForDay(dateByUserId.UserId, dateByUserId.Date)
+	if err != nil {
+		writeJSONError(w, common.ErrorResponse{StatusCode: http.StatusServiceUnavailable, Message: err.Error()})
+		return
+	}
+
+	writeJSONResults(w, *events)
 	
 }
 
@@ -127,6 +141,20 @@ func (h *Handler) GetEventsForWeek(w http.ResponseWriter, r *http.Request) {
 		writeJSONError(w, common.ErrorResponse{StatusCode: http.StatusMethodNotAllowed, Message: "Allow: GET"})
 		return
 	}
+
+	dateByUserId, err := parseDateAndId(r)
+	if err != nil {
+		writeJSONError(w, common.ErrorResponse{StatusCode: http.StatusBadRequest, Message: err.Error()})
+		return
+	}
+
+	events, err := h.service.GetEventsForWeek(dateByUserId.UserId, dateByUserId.Date)
+	if err != nil {
+		writeJSONError(w, common.ErrorResponse{StatusCode: http.StatusServiceUnavailable, Message: err.Error()})
+		return
+	}
+
+	writeJSONResults(w, *events)
 	
 }
 
@@ -136,6 +164,20 @@ func (h *Handler) GetEventsForMonth(w http.ResponseWriter, r *http.Request) {
 		writeJSONError(w, common.ErrorResponse{StatusCode: http.StatusMethodNotAllowed, Message: "Allow: GET"})
 		return
 	}
+
+	dateByUserId, err := parseDateAndId(r)
+	if err != nil {
+		writeJSONError(w, common.ErrorResponse{StatusCode: http.StatusBadRequest, Message: err.Error()})
+		return
+	}
+
+	events, err := h.service.GetEventsForMonth(dateByUserId.UserId, dateByUserId.Date)
+	if err != nil {
+		writeJSONError(w, common.ErrorResponse{StatusCode: http.StatusServiceUnavailable, Message: err.Error()})
+		return
+	}
+
+	writeJSONResults(w, *events)
 	
 }
 
@@ -153,6 +195,15 @@ func writeJSONResult(w http.ResponseWriter, res Event) {
 	w.WriteHeader(http.StatusOK)
 	data := struct {
 		Result Event `json:"result"`
+	} {Result: res}
+	json.NewEncoder(w).Encode(data)
+}
+
+func writeJSONResults(w http.ResponseWriter, res []Event) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	data := struct {
+		Result []Event `json:"result"`
 	} {Result: res}
 	json.NewEncoder(w).Encode(data)
 }
@@ -245,4 +296,33 @@ func parseForm(r *http.Request) (*Event, error) {
 	event.Description = jsonEvent["description"].(string)
 
 	return &event, nil
+}
+
+type DateByUserId struct {
+	UserId int
+	Date time.Time
+}
+
+func parseDateAndId(r *http.Request) (*DateByUserId, error) {
+	var dateByUserId DateByUserId
+	var err error
+	raw := r.URL.Query()["user_id"]
+	if len(raw) == 0 {
+		return nil, errors.New("user_id not found")
+	}
+	dateByUserId.UserId, err = strconv.Atoi(raw[0])
+	if err != nil {
+		return nil, errors.New("user_id must be a number")
+	}
+
+	raw = r.URL.Query()["date"]
+	if len(raw) == 0 {
+		return nil, errors.New("date not found")
+	}
+	dateByUserId.Date, err = time.Parse(time.RFC3339, raw[0])
+	if err != nil {
+		return nil, err
+	}
+
+	return &dateByUserId, nil
 }

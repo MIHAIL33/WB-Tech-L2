@@ -1,14 +1,14 @@
 package calendar
 
+import "time"
+
 type CalendarCacheInterface interface {
 	CreateEvent (event Event) (*Event, error)
 	UpdateEvent (event Event) (*Event, error)
 	DeleteEvent (id int) (*Event, error)
 	GetEventById (id int) (*Event, error)
 
-	GetEventsForDay() (*[]Event, error)
-	GetEventsForMonth() (*[]Event, error)
-	GetEventsForWeek() (*[]Event, error)
+	GetEventsForDate(userId int, date time.Time, before time.Duration) (*[]Event, error)
 }
 
 type Cache struct {

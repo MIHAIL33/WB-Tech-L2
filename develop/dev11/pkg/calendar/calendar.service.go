@@ -3,6 +3,7 @@ package calendar
 import (
 	"errors"
 	"strconv"
+	"time"
 )
 
 type CalendarService struct {
@@ -61,14 +62,26 @@ func (cs *CalendarService) DeleteEvent(id int) (*Event, error) {
 	return deletedEvent, nil
 }
 
-func (cs *CalendarService) GetEventsForDay() (*[]Event, error) {
-	return nil, nil
+func (cs *CalendarService) GetEventsForDay(userId int, date time.Time) (*[]Event, error) {
+	events, err := cs.ch.GetEventsForDate(userId, date, 24 * time.Hour)
+	if err != nil {
+		return nil, err
+	}
+	return events, nil
 }
 
-func (cs *CalendarService) GetEventsForWeek() (*[]Event, error) {
-	return nil, nil
+func (cs *CalendarService) GetEventsForWeek(userId int, date time.Time) (*[]Event, error) {
+	events, err := cs.ch.GetEventsForDate(userId, date, 7 * 24 * time.Hour)
+	if err != nil {
+		return nil, err
+	}
+	return events, nil
 }
 
-func (cs *CalendarService) GetEventsForMonth() (*[]Event, error) {
-	return nil, nil
+func (cs *CalendarService) GetEventsForMonth(userId int, date time.Time) (*[]Event, error) {
+	events, err := cs.ch.GetEventsForDate(userId, date, 30 * 24 * time.Hour)
+	if err != nil {
+		return nil, err
+	}
+	return events, nil
 }

@@ -3,6 +3,7 @@ package calendar
 import (
 	"errors"
 	"strconv"
+	"time"
 )
 
 type CalendarCache struct {
@@ -53,14 +54,16 @@ func (cc *CalendarCache) GetEventById(id int) (*Event, error) {
 	return nil, errors.New("event with id = " + strconv.Itoa(id) + " not found") 
 }
 
-func (cc *CalendarCache) GetEventsForDay() (*[]Event, error) {
-	return nil, nil
-}
-
-func (cc *CalendarCache) GetEventsForWeek() (*[]Event, error) {
-	return nil, nil
-}
-
-func (cc *CalendarCache) GetEventsForMonth() (*[]Event, error) {
-	return nil, nil
+func (cc *CalendarCache) GetEventsForDate(userId int, date time.Time, before time.Duration) (*[]Event, error) {
+	var events []Event
+	beforeDate := date.Add(before)
+	for _, val := range *cc.events {
+		if val.UserId == userId {
+			if val.Date.After(date) && val.Date.Before(beforeDate) {
+				events = append(events, val)
+			}
+		}
+	}
+	
+	return &events, nil
 }
