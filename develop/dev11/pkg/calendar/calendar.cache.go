@@ -21,11 +21,26 @@ func (cc *CalendarCache) CreateEvent(event Event) (*Event, error) {
 }
 
 func (cc *CalendarCache) UpdateEvent(event Event) (*Event, error) {
-	return nil, nil
+	for i, val := range *cc.events {
+		if val.Id == event.Id {
+			(*cc.events)[i] = event
+			return &val, nil
+		}
+	}
+	return nil, errors.New("event with id = " + strconv.Itoa(event.Id) + " not updated")
 }
 
 func (cc *CalendarCache) DeleteEvent(id int) (*Event, error) {
-	return nil, nil
+	for i, val := range *cc.events {
+		if val.Id == id {
+			copy((*cc.events)[i:], (*cc.events)[i + 1:])
+			(*cc.events)[len(*cc.events) - 1] = Event{}
+			*cc.events = (*cc.events)[:len(*cc.events) - 1]
+			return &val, nil
+		}
+	}
+	
+	return nil, errors.New("event with id = " + strconv.Itoa(id) + " not deleted")
 }
 
 func (cc *CalendarCache) GetEventById(id int) (*Event, error) {

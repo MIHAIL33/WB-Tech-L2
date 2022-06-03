@@ -3,8 +3,6 @@ package calendar
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
-	"io"
 	"net/http"
 	"strconv"
 	"time"
@@ -19,7 +17,7 @@ func (h *Handler) CreateEvent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	event, err := parseBody(r)
+	event, err := parseForm(r)
 	if err != nil {
 		writeJSONError(w, common.ErrorResponse{StatusCode: http.StatusBadRequest, Message: err.Error()})
 		return
@@ -52,7 +50,14 @@ func (h *Handler) GetByIdEvent(w http.ResponseWriter, r *http.Request) {
 		writeJSONError(w, common.ErrorResponse{StatusCode: http.StatusBadRequest, Message: "id must be a number"})
 		return
 	}
-	fmt.Println(id)
+
+	event, err := h.service.GetByIdEvent(id)
+	if err != nil {
+		writeJSONError(w, common.ErrorResponse{StatusCode: http.StatusServiceUnavailable, Message: err.Error()})
+		return
+	}
+
+	writeJSONResult(w, *event)
 
 }
 
@@ -63,6 +68,20 @@ func (h *Handler) UpdateEvent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	event, err := parseForm(r)
+	if err != nil {
+		writeJSONError(w, common.ErrorResponse{StatusCode: http.StatusBadRequest, Message: err.Error()})
+		return
+	}
+
+	event, err = h.service.UpdateEvent(*event)
+	if err != nil {
+		writeJSONError(w, common.ErrorResponse{StatusCode: http.StatusServiceUnavailable, Message: err.Error()})
+		return
+	}
+
+	writeJSONResult(w, *event)
+
 }
 
 func (h *Handler) DeleteEvent(w http.ResponseWriter, r *http.Request) {
@@ -71,6 +90,25 @@ func (h *Handler) DeleteEvent(w http.ResponseWriter, r *http.Request) {
 		writeJSONError(w, common.ErrorResponse{StatusCode: http.StatusMethodNotAllowed, Message: "Allow: POST"})
 		return
 	}
+
+	raw := r.URL.Query()["id"]
+	if len(raw) == 0 {
+		writeJSONError(w, common.ErrorResponse{StatusCode: http.StatusBadRequest, Message: "param id is not found"})
+		return
+	}
+	id, err := strconv.Atoi(raw[0])
+	if err != nil {
+		writeJSONError(w, common.ErrorResponse{StatusCode: http.StatusBadRequest, Message: "id must be a number"})
+		return
+	}
+
+	event, err := h.service.DeleteEvent(id)
+	if err != nil {
+		writeJSONError(w, common.ErrorResponse{StatusCode: http.StatusServiceUnavailable, Message: err.Error()})
+		return
+	}
+
+	writeJSONResult(w, *event)
 	
 }
 
@@ -119,44 +157,90 @@ func writeJSONResult(w http.ResponseWriter, res Event) {
 	json.NewEncoder(w).Encode(data)
 }
 
-func parseBody(r *http.Request) (*Event, error) {
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		return nil, err
-	}
+// func parseBody(r *http.Request) (*Event, error) {
+// 	body, err := io.ReadAll(r.Body)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	jsonEvent := make(map[string]interface{})
+// 	var event Event
+// 	err = json.Unmarshal(body, &jsonEvent)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	if _, ok := jsonEvent["id"].(float64); !ok {
+// 		return nil, errors.New("id must be a number")
+// 	}
+// 	event.Id = int(jsonEvent["id"].(float64))
+
+// 	if _, ok := jsonEvent["user_id"].(float64); !ok {
+// 		return nil, errors.New("user_id must be a number")
+// 	}
+// 	event.UserId = int(jsonEvent["user_id"].(float64))
+
+// 	if _, ok := jsonEvent["date"].(string); !ok {
+// 		return nil, errors.New("date must be a string (date format)")
+// 	}
+// 	date := jsonEvent["date"].(string)
+// 	event.Date, err = time.Parse(time.RFC3339, date)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	if _, ok := jsonEvent["title"].(string); !ok {
+// 		return nil, errors.New("title must be a string")
+// 	}
+// 	event.Title = jsonEvent["title"].(string)
+	
+// 	if _, ok := jsonEvent["description"].(string); !ok {
+// 		return nil, errors.New("description must be a string")
+// 	}
+// 	event.Description = jsonEvent["description"].(string)
+
+// 	return &event, nil
+// }
+
+func parseForm(r *http.Request) (*Event, error) {
+	r.ParseForm()
 	jsonEvent := make(map[string]interface{})
 	var event Event
-	err = json.Unmarshal(body, &jsonEvent)
-	if err != nil {
-		return nil, err
+	var err error
+	for key, val := range r.PostForm {
+		jsonEvent[key] = val[0]
 	}
 
-	if _, ok := jsonEvent["id"].(float64); !ok {
+	if jsonEvent["id"] == nil {
+		return nil, errors.New("id not found")
+	}
+	event.Id, err = strconv.Atoi(jsonEvent["id"].(string))
+	if err != nil {
 		return nil, errors.New("id must be a number")
 	}
-	event.Id = int(jsonEvent["id"].(float64))
 
-	if _, ok := jsonEvent["user_id"].(float64); !ok {
+	if jsonEvent["user_id"] == nil {
+		return nil, errors.New("user_id not found")
+	}
+	event.UserId, err = strconv.Atoi(jsonEvent["user_id"].(string))
+	if err != nil {
 		return nil, errors.New("user_id must be a number")
 	}
-	event.UserId = int(jsonEvent["user_id"].(float64))
 
-	if _, ok := jsonEvent["date"].(string); !ok {
-		return nil, errors.New("date must be a string (date format)")
+	if jsonEvent["date"] == nil {
+		return nil, errors.New("date not found")
 	}
-	date := jsonEvent["date"].(string)
-	event.Date, err = time.Parse(time.RFC3339, date)
+	event.Date, err = time.Parse(time.RFC3339, jsonEvent["date"].(string))
 	if err != nil {
 		return nil, err
 	}
 
-	if _, ok := jsonEvent["title"].(string); !ok {
-		return nil, errors.New("title must be a string")
+	if jsonEvent["title"] == nil {
+		return nil, errors.New("title not found")
 	}
 	event.Title = jsonEvent["title"].(string)
-	
-	if _, ok := jsonEvent["description"].(string); !ok {
-		return nil, errors.New("description must be a string")
+
+	if jsonEvent["description"] == nil {
+		return nil, errors.New("description not found")
 	}
 	event.Description = jsonEvent["description"].(string)
 

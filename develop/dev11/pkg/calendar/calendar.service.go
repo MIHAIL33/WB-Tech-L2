@@ -29,12 +29,36 @@ func (cs *CalendarService) CreateEvent(event Event) (*Event, error) {
 	return newEvent, nil
 }
 
+func (cs *CalendarService) GetByIdEvent(id int) (*Event, error) {
+	getEvent, err := cs.ch.GetEventById(id)
+	if err != nil {
+		return nil, err
+	}
+	return getEvent, nil
+}
+
 func (cs *CalendarService) UpdateEvent(event Event) (*Event, error) {
-	return nil, nil
+	_, err := cs.ch.GetEventById(event.Id)
+	if err != nil {
+		return nil, err
+	}
+	updatedEvent, err := cs.ch.UpdateEvent(event)
+	if err != nil {
+		return nil, err
+	}
+	return updatedEvent, nil
 }
 
 func (cs *CalendarService) DeleteEvent(id int) (*Event, error) {
-	return nil, nil
+	_, err := cs.ch.GetEventById(id)
+	if err != nil {
+		return nil, err
+	}
+	deletedEvent, err := cs.ch.DeleteEvent(id)
+	if err != nil {
+		return nil, err
+	}
+	return deletedEvent, nil
 }
 
 func (cs *CalendarService) GetEventsForDay() (*[]Event, error) {
