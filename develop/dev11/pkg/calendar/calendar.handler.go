@@ -10,6 +10,7 @@ import (
 	"github.com/MIHAIL33/WB-TECH-L2/develop/dev11/common"
 )
 
+//CreateEvent - create event
 func (h *Handler) CreateEvent(w http.ResponseWriter, r *http.Request) {
 	
 	if r.Method != http.MethodPost {
@@ -33,7 +34,8 @@ func (h *Handler) CreateEvent(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (h *Handler) GetByIdEvent(w http.ResponseWriter, r *http.Request) {
+//GetByIDEvent - get event by id
+func (h *Handler) GetByIDEvent(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method != http.MethodGet {
 		writeJSONError(w, common.ErrorResponse{StatusCode: http.StatusMethodNotAllowed, Message: "Allow: GET"})
@@ -51,7 +53,7 @@ func (h *Handler) GetByIdEvent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	event, err := h.service.GetByIdEvent(id)
+	event, err := h.service.GetByIDEvent(id)
 	if err != nil {
 		writeJSONError(w, common.ErrorResponse{StatusCode: http.StatusServiceUnavailable, Message: err.Error()})
 		return
@@ -61,6 +63,7 @@ func (h *Handler) GetByIdEvent(w http.ResponseWriter, r *http.Request) {
 
 }
 
+//UpdateEvent - update event
 func (h *Handler) UpdateEvent(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method != http.MethodPost {
@@ -84,6 +87,7 @@ func (h *Handler) UpdateEvent(w http.ResponseWriter, r *http.Request) {
 
 }
 
+//DeleteEvent - delete event
 func (h *Handler) DeleteEvent(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method != http.MethodPost {
@@ -112,6 +116,7 @@ func (h *Handler) DeleteEvent(w http.ResponseWriter, r *http.Request) {
 	
 }
 
+//GetEventsForDay - get all events for a given period of time (day)
 func (h *Handler) GetEventsForDay(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method != http.MethodGet {
@@ -119,13 +124,13 @@ func (h *Handler) GetEventsForDay(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dateByUserId, err := parseDateAndId(r)
+	dateByuserID, err := parseDateAndID(r)
 	if err != nil {
 		writeJSONError(w, common.ErrorResponse{StatusCode: http.StatusBadRequest, Message: err.Error()})
 		return
 	}
 
-	events, err := h.service.GetEventsForDay(dateByUserId.UserId, dateByUserId.Date)
+	events, err := h.service.GetEventsForDay(dateByuserID.userID, dateByuserID.Date)
 	if err != nil {
 		writeJSONError(w, common.ErrorResponse{StatusCode: http.StatusServiceUnavailable, Message: err.Error()})
 		return
@@ -135,6 +140,7 @@ func (h *Handler) GetEventsForDay(w http.ResponseWriter, r *http.Request) {
 	
 }
 
+//GetEventsForWeek - get all events for a given period of time (week)
 func (h *Handler) GetEventsForWeek(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method != http.MethodGet {
@@ -142,13 +148,13 @@ func (h *Handler) GetEventsForWeek(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dateByUserId, err := parseDateAndId(r)
+	dateByuserID, err := parseDateAndID(r)
 	if err != nil {
 		writeJSONError(w, common.ErrorResponse{StatusCode: http.StatusBadRequest, Message: err.Error()})
 		return
 	}
 
-	events, err := h.service.GetEventsForWeek(dateByUserId.UserId, dateByUserId.Date)
+	events, err := h.service.GetEventsForWeek(dateByuserID.userID, dateByuserID.Date)
 	if err != nil {
 		writeJSONError(w, common.ErrorResponse{StatusCode: http.StatusServiceUnavailable, Message: err.Error()})
 		return
@@ -158,6 +164,7 @@ func (h *Handler) GetEventsForWeek(w http.ResponseWriter, r *http.Request) {
 	
 }
 
+//GetEventsForMonth - get all events for a given period of time (month)
 func (h *Handler) GetEventsForMonth(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method != http.MethodGet {
@@ -165,13 +172,13 @@ func (h *Handler) GetEventsForMonth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dateByUserId, err := parseDateAndId(r)
+	dateByuserID, err := parseDateAndID(r)
 	if err != nil {
 		writeJSONError(w, common.ErrorResponse{StatusCode: http.StatusBadRequest, Message: err.Error()})
 		return
 	}
 
-	events, err := h.service.GetEventsForMonth(dateByUserId.UserId, dateByUserId.Date)
+	events, err := h.service.GetEventsForMonth(dateByuserID.userID, dateByuserID.Date)
 	if err != nil {
 		writeJSONError(w, common.ErrorResponse{StatusCode: http.StatusServiceUnavailable, Message: err.Error()})
 		return
@@ -228,7 +235,7 @@ func writeJSONResults(w http.ResponseWriter, res []Event) {
 // 	if _, ok := jsonEvent["user_id"].(float64); !ok {
 // 		return nil, errors.New("user_id must be a number")
 // 	}
-// 	event.UserId = int(jsonEvent["user_id"].(float64))
+// 	event.userID = int(jsonEvent["user_id"].(float64))
 
 // 	if _, ok := jsonEvent["date"].(string); !ok {
 // 		return nil, errors.New("date must be a string (date format)")
@@ -264,7 +271,7 @@ func parseForm(r *http.Request) (*Event, error) {
 	if jsonEvent["id"] == nil {
 		return nil, errors.New("id not found")
 	}
-	event.Id, err = strconv.Atoi(jsonEvent["id"].(string))
+	event.ID, err = strconv.Atoi(jsonEvent["id"].(string))
 	if err != nil {
 		return nil, errors.New("id must be a number")
 	}
@@ -272,7 +279,7 @@ func parseForm(r *http.Request) (*Event, error) {
 	if jsonEvent["user_id"] == nil {
 		return nil, errors.New("user_id not found")
 	}
-	event.UserId, err = strconv.Atoi(jsonEvent["user_id"].(string))
+	event.UserID, err = strconv.Atoi(jsonEvent["user_id"].(string))
 	if err != nil {
 		return nil, errors.New("user_id must be a number")
 	}
@@ -298,19 +305,20 @@ func parseForm(r *http.Request) (*Event, error) {
 	return &event, nil
 }
 
-type DateByUserId struct {
-	UserId int
+//DateByUserID - type for parse get for date
+type DateByUserID struct {
+	userID int
 	Date time.Time
 }
 
-func parseDateAndId(r *http.Request) (*DateByUserId, error) {
-	var dateByUserId DateByUserId
+func parseDateAndID(r *http.Request) (*DateByUserID, error) {
+	var dateByuserID DateByUserID
 	var err error
 	raw := r.URL.Query()["user_id"]
 	if len(raw) == 0 {
 		return nil, errors.New("user_id not found")
 	}
-	dateByUserId.UserId, err = strconv.Atoi(raw[0])
+	dateByuserID.userID, err = strconv.Atoi(raw[0])
 	if err != nil {
 		return nil, errors.New("user_id must be a number")
 	}
@@ -319,10 +327,10 @@ func parseDateAndId(r *http.Request) (*DateByUserId, error) {
 	if len(raw) == 0 {
 		return nil, errors.New("date not found")
 	}
-	dateByUserId.Date, err = time.Parse(time.RFC3339, raw[0])
+	dateByuserID.Date, err = time.Parse(time.RFC3339, raw[0])
 	if err != nil {
 		return nil, err
 	}
 
-	return &dateByUserId, nil
+	return &dateByuserID, nil
 }

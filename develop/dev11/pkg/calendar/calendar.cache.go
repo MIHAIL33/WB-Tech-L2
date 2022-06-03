@@ -6,34 +6,39 @@ import (
 	"time"
 )
 
-type CalendarCache struct {
+//CacheCalendar - type of calendar cache
+type CacheCalendar struct {
 	events *[]Event
 }
 
-func NewCalendarCache() *CalendarCache {
-	return &CalendarCache{
+//NewCalendarCache - constructor
+func NewCalendarCache() *CacheCalendar {
+	return &CacheCalendar{
 		events: new([]Event),
 	}
 }
 
-func (cc *CalendarCache) CreateEvent(event Event) (*Event, error) {
+//CreateEvent - create event
+func (cc *CacheCalendar) CreateEvent(event Event) (*Event, error) {
 	*cc.events = append(*cc.events, event)
 	return &event, nil
 }
 
-func (cc *CalendarCache) UpdateEvent(event Event) (*Event, error) {
+//UpdateEvent - update event
+func (cc *CacheCalendar) UpdateEvent(event Event) (*Event, error) {
 	for i, val := range *cc.events {
-		if val.Id == event.Id {
+		if val.ID == event.ID {
 			(*cc.events)[i] = event
 			return &val, nil
 		}
 	}
-	return nil, errors.New("event with id = " + strconv.Itoa(event.Id) + " not updated")
+	return nil, errors.New("event with id = " + strconv.Itoa(event.ID) + " not updated")
 }
 
-func (cc *CalendarCache) DeleteEvent(id int) (*Event, error) {
+//DeleteEvent - delete event
+func (cc *CacheCalendar) DeleteEvent(id int) (*Event, error) {
 	for i, val := range *cc.events {
-		if val.Id == id {
+		if val.ID == id {
 			copy((*cc.events)[i:], (*cc.events)[i + 1:])
 			(*cc.events)[len(*cc.events) - 1] = Event{}
 			*cc.events = (*cc.events)[:len(*cc.events) - 1]
@@ -44,9 +49,10 @@ func (cc *CalendarCache) DeleteEvent(id int) (*Event, error) {
 	return nil, errors.New("event with id = " + strconv.Itoa(id) + " not deleted")
 }
 
-func (cc *CalendarCache) GetEventById(id int) (*Event, error) {
+//GetEventByID - get event by id
+func (cc *CacheCalendar) GetEventByID(id int) (*Event, error) {
 	for _, val := range *cc.events {
-		if val.Id == id {
+		if val.ID == id {
 			return &val, nil
 		}
 	}
@@ -54,11 +60,12 @@ func (cc *CalendarCache) GetEventById(id int) (*Event, error) {
 	return nil, errors.New("event with id = " + strconv.Itoa(id) + " not found") 
 }
 
-func (cc *CalendarCache) GetEventsForDate(userId int, date time.Time, before time.Duration) (*[]Event, error) {
+//GetEventsForDate - get all events for a given period of time 
+func (cc *CacheCalendar) GetEventsForDate(userID int, date time.Time, before time.Duration) (*[]Event, error) {
 	var events []Event
 	beforeDate := date.Add(before)
 	for _, val := range *cc.events {
-		if val.UserId == userId {
+		if val.UserID == userID {
 			if val.Date.After(date) && val.Date.Before(beforeDate) {
 				events = append(events, val)
 			}

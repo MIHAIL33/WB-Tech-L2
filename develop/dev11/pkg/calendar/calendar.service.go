@@ -6,20 +6,23 @@ import (
 	"time"
 )
 
-type CalendarService struct {
+//ServiceCalendar - type of calendar service
+type ServiceCalendar struct {
 	ch *Cache
 }
 
-func NewCalendarService() *CalendarService {
-	return &CalendarService{
+//NewCalendarService - constructor
+func NewCalendarService() *ServiceCalendar {
+	return &ServiceCalendar{
 		ch: NewCache(),
 	}
 }
 
-func (cs *CalendarService) CreateEvent(event Event) (*Event, error) {
-	eventExist, _ := cs.ch.GetEventById(event.Id)
+//CreateEvent - create event
+func (cs *ServiceCalendar) CreateEvent(event Event) (*Event, error) {
+	eventExist, _ := cs.ch.GetEventByID(event.ID)
 	if eventExist != nil {
-		return nil, errors.New("event with id = " + strconv.Itoa(event.Id) + " already exist")
+		return nil, errors.New("event with id = " + strconv.Itoa(event.ID) + " already exist")
 	}
 
 	newEvent, err := cs.ch.CreateEvent(event)
@@ -30,16 +33,18 @@ func (cs *CalendarService) CreateEvent(event Event) (*Event, error) {
 	return newEvent, nil
 }
 
-func (cs *CalendarService) GetByIdEvent(id int) (*Event, error) {
-	getEvent, err := cs.ch.GetEventById(id)
+//GetByIDEvent - get event by id
+func (cs *ServiceCalendar) GetByIDEvent(id int) (*Event, error) {
+	getEvent, err := cs.ch.GetEventByID(id)
 	if err != nil {
 		return nil, err
 	}
 	return getEvent, nil
 }
 
-func (cs *CalendarService) UpdateEvent(event Event) (*Event, error) {
-	_, err := cs.ch.GetEventById(event.Id)
+//UpdateEvent - update event
+func (cs *ServiceCalendar) UpdateEvent(event Event) (*Event, error) {
+	_, err := cs.ch.GetEventByID(event.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -50,8 +55,9 @@ func (cs *CalendarService) UpdateEvent(event Event) (*Event, error) {
 	return updatedEvent, nil
 }
 
-func (cs *CalendarService) DeleteEvent(id int) (*Event, error) {
-	_, err := cs.ch.GetEventById(id)
+//DeleteEvent - delete event by id
+func (cs *ServiceCalendar) DeleteEvent(id int) (*Event, error) {
+	_, err := cs.ch.GetEventByID(id)
 	if err != nil {
 		return nil, err
 	}
@@ -62,24 +68,27 @@ func (cs *CalendarService) DeleteEvent(id int) (*Event, error) {
 	return deletedEvent, nil
 }
 
-func (cs *CalendarService) GetEventsForDay(userId int, date time.Time) (*[]Event, error) {
-	events, err := cs.ch.GetEventsForDate(userId, date, 24 * time.Hour)
+//GetEventsForDay - get all events for a given period of time (day)
+func (cs *ServiceCalendar) GetEventsForDay(userID int, date time.Time) (*[]Event, error) {
+	events, err := cs.ch.GetEventsForDate(userID, date, 24 * time.Hour)
 	if err != nil {
 		return nil, err
 	}
 	return events, nil
 }
 
-func (cs *CalendarService) GetEventsForWeek(userId int, date time.Time) (*[]Event, error) {
-	events, err := cs.ch.GetEventsForDate(userId, date, 7 * 24 * time.Hour)
+//GetEventsForWeek - get all events for a given period of time (week)
+func (cs *ServiceCalendar) GetEventsForWeek(userID int, date time.Time) (*[]Event, error) {
+	events, err := cs.ch.GetEventsForDate(userID, date, 7 * 24 * time.Hour)
 	if err != nil {
 		return nil, err
 	}
 	return events, nil
 }
 
-func (cs *CalendarService) GetEventsForMonth(userId int, date time.Time) (*[]Event, error) {
-	events, err := cs.ch.GetEventsForDate(userId, date, 30 * 24 * time.Hour)
+//GetEventsForMonth - get all events for a given period of time (month)
+func (cs *ServiceCalendar) GetEventsForMonth(userID int, date time.Time) (*[]Event, error) {
+	events, err := cs.ch.GetEventsForDate(userID, date, 30 * 24 * time.Hour)
 	if err != nil {
 		return nil, err
 	}

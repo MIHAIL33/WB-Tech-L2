@@ -2,23 +2,26 @@ package calendar
 
 import "time"
 
-type CalendarServiceInterface interface {
+//ServiceInterface - interface of calendar service
+type ServiceInterface interface {
 	CreateEvent (event Event) (*Event, error)
 	UpdateEvent (event Event) (*Event, error)
 	DeleteEvent (id int) (*Event, error)
-	GetByIdEvent (id int) (*Event, error)
+	GetByIDEvent (id int) (*Event, error)
 
-	GetEventsForDay(userId int, date time.Time) (*[]Event, error)
-	GetEventsForMonth(userId int, date time.Time) (*[]Event, error)
-	GetEventsForWeek(userId int, date time.Time) (*[]Event, error)
+	GetEventsForDay(userID int, date time.Time) (*[]Event, error)
+	GetEventsForMonth(userID int, date time.Time) (*[]Event, error)
+	GetEventsForWeek(userID int, date time.Time) (*[]Event, error)
 }
 
+//Service - base type of service
 type Service struct {
-	CalendarServiceInterface
+	ServiceInterface
 }
 
+//NewService - constructor
 func NewService() *Service {
 	return &Service{
-		CalendarServiceInterface: NewCalendarService(),
+		ServiceInterface: NewCalendarService(),
 	}
 }

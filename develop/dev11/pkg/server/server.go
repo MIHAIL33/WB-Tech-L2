@@ -6,10 +6,12 @@ import (
 	"time"
 )
 
+//Server - type of http server
 type Server struct {
 	httpServer *http.Server
 }
 
+//Run - run server
 func (s *Server) Run(port string) error {
 	s.httpServer = &http.Server{
 		Addr: ":" + port,
@@ -20,6 +22,7 @@ func (s *Server) Run(port string) error {
 	return s.httpServer.ListenAndServe()
 }
 
+//Shutdown - stop server
 func (s *Server) Shutdown(ctx context.Context) error {
 	return s.httpServer.Shutdown(ctx)
 }
