@@ -3,10 +3,17 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"errors"
 	"fmt"
 	"log"
+	"net"
 	"os"
+	"os/exec"
+	"path/filepath"
+	"sort"
+	"strconv"
 	"strings"
+	"syscall"
 )
 
 /*
@@ -32,7 +39,7 @@ type pwdS struct{}
 type echoS struct{}
 type killS struct{}
 type psS struct{}
-type forkS struct{}
+//type forkS struct{} 
 type execS struct{}
 type ncS struct{}
 type quitS struct{}
@@ -60,8 +67,115 @@ func (shell *pwdS) run(args []string, input *bytes.Buffer, pipes bool) (*bytes.B
 	return &output, nil
 }
 
-func (shell *pwdS) run(args []string, input *bytes.Buffer, pipes bool) (*bytes.Buffer, error) {
+func (shell *echoS) run(args []string, input *bytes.Buffer, pipes bool) (*bytes.Buffer, error) {
+	var output bytes.Buffer
+	var err error
 
+	if len(args) > 0 {
+		_, err = output.WriteString(args[0] + "\n")
+	} else {
+		_, err = output.WriteString("\n")
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &output, nil
+}
+
+func (shell *killS) run(args []string, input *bytes.Buffer, pipes bool) (*bytes.Buffer, error) {
+	if len(args) > 0 {
+		pid, err := strconv.Atoi(args[0])
+		if err != nil {
+			return nil, err
+		}
+		syscall.Kill(pid, syscall.SIGKILL)
+	}
+	return nil, nil
+}
+
+type proc struct {
+	name string
+	pid int
+}
+
+func (shell *psS) run(args []string, input *bytes.Buffer, pipes bool) (*bytes.Buffer, error) {
+	var output bytes.Buffer
+
+	ps, err := filepath.Glob("/proc/*/exe")
+	if err != nil {
+		return nil, err
+	}
+
+	var procs []proc
+	for _, file := range ps {
+		link, _ := os.Readlink(file)
+		if len(link) > 0 {
+			name := filepath.Base(link)
+			pid, err := strconv.Atoi(strings.Split(file, "/")[2])
+
+			if err == nil {
+				procs = append(procs, proc{name, pid})
+			}
+		}
+	}
+
+	sort.Slice(procs, func(i, j int) bool { return procs[i].pid < procs[j].pid })
+
+	output.WriteString("PID Name\n")
+	for _, val := range procs {
+		output.WriteString(fmt.Sprintf("%d %s\n", val.pid, val.name))
+	}
+	return &output, nil
+}
+
+
+func (shell *execS) run(args []string, input *bytes.Buffer, pipes bool) (*bytes.Buffer, error) {
+	com := exec.Command(args[0], args[1:]...)
+	var output bytes.Buffer
+
+	if input != nil {
+		com.Stdin = bytes.NewReader((*input).Bytes())
+	}
+
+	com.Stdout = &output
+	com.Stderr = os.Stderr
+	if err := com.Run(); err != nil {
+		return nil, err
+	}
+
+	return &output, nil
+}
+
+func (shell *ncS) run(args []string, input *bytes.Buffer, pipes bool) (*bytes.Buffer, error) {
+	if len(args) < 3 {
+		return nil, errors.New("too few args (type, ip, port)")
+	}
+
+	conn, err := net.Dial(args[0], args[1] + ":" + args[2])
+	if err != nil {
+		return nil, err
+	}
+
+	var str string
+	fmt.Printf(">")
+	fmt.Scan(&str)
+
+	_, err = conn.Write([]byte(str)) 
+
+	if err != nil {
+		return nil, err
+	}
+
+	return nil, nil
+}
+
+func (shell *quitS) run(args []string, input *bytes.Buffer, pipes bool) (*bytes.Buffer, error) {
+	if !pipes {
+		os.Exit(0)
+	}
+	return nil, nil
 }
 
 func runCommand(command string, input *bytes.Buffer, pipes bool) (*bytes.Buffer, error) {
@@ -83,8 +197,18 @@ func runCommand(command string, input *bytes.Buffer, pipes bool) (*bytes.Buffer,
 		sh = &pwdS{}
 	case "echo":
 		sh = &echoS{}
+	case "kill":
+		sh = &killS{}
+	case "ps":
+		sh = &psS{}
+	case "exec":
+		sh = &execS{}
+	case "nc":
+		sh = &ncS{}
+	case "quit":
+		sh = &quitS{}
 	}
-
+	
 	if sh != nil {
 		return sh.run(args[1:], input, pipes)
 	}
