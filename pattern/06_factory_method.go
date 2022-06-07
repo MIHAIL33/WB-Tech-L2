@@ -1,12 +1,77 @@
 package pattern
 
+import "errors"
+
 /*
 	Реализовать паттерн «фабричный метод».
 Объяснить применимость паттерна, его плюсы и минусы, а также реальные примеры использования данного примера на практике.
 	https://en.wikipedia.org/wiki/Factory_method_pattern
 */
 
+type ICar interface {
+	SetName(name string)
+	SetEngine(name string)
+	GetName() string
+	GetEngine() string
+}
 
+type Car struct {
+	name string
+	engine string
+}
+
+func (c *Car) SetName(name string) {
+	c.name = name
+}
+
+func (c *Car) SetEngine(name string) {
+	c.engine = name
+}
+
+func (c *Car) GetName() string {
+	return c.name
+}
+
+func (c *Car) GetEngine() string {
+	return c.engine
+}
+
+type BMW struct {
+	Car
+}
+
+func NewBMW() ICar {
+	return &BMW{
+		Car: Car{
+			name: "BMW",
+			engine: "V8",
+		},
+	}
+}
+
+type Shkoda struct {
+	Car
+}
+
+func NewShkoda() ICar {
+	return &Shkoda{
+		Car: Car{
+			name: "Shkoda",
+			engine: "V6",
+		},
+	}
+}
+
+func GetAvto(avtoType string) (ICar, error) {
+	switch avtoType {
+	case "BMW":
+		return NewBMW(), nil
+	case "Shkoda":
+		return NewShkoda(), nil
+	default:
+		return nil, errors.New("wrong type")
+	}
+}
 
 /*
 	Использование:
