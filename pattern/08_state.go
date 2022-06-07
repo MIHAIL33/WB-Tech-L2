@@ -1,12 +1,40 @@
 package pattern
 
+import "fmt"
+
 /*
 	Реализовать паттерн «состояние».
 Объяснить применимость паттерна, его плюсы и минусы, а также реальные примеры использования данного примера на практике.
 	https://en.wikipedia.org/wiki/State_pattern
 */
 
+type State interface {
+	Handle()
+}
 
+type Context struct {
+	State
+}
+
+func (c *Context) Request() {
+	c.State.Handle()
+}
+
+func (c *Context) SetState(state State) {
+	c.State = state
+}
+
+type StateA struct {}
+
+func (s *StateA) Handle() {
+	fmt.Println("StateA")	
+}
+
+type StateB struct {}
+
+func (s *StateB) Handle() {
+	fmt.Println("StateB")
+}
 
 /*
 	Использование:

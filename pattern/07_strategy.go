@@ -6,7 +6,19 @@ package pattern
 	https://en.wikipedia.org/wiki/Strategy_pattern
 */
 
+type Price struct {
+	Discount func() float64
+	Amount float64
+	FinalPrice float64
+}
 
+func (p *Price) Sell() {
+	p.FinalPrice = p.Amount * p.Discount()
+}
+
+func (p *Price) SetStrategy(discount func() float64) {
+	p.Discount = discount
+}
 
 /*
 	Использование:

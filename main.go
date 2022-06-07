@@ -84,4 +84,29 @@ func main() {
 
 	//Strategy
 	fmt.Println("///////////////////////////////Strategy")
+
+	sell30 := func() float64 {
+		return 0.7
+	}
+
+	sell50 := func() float64 {
+		return 0.5
+	}
+
+	price := pattern.Price{Amount: 100, Discount: sell30}
+	price.Sell()
+	fmt.Println(price.FinalPrice)
+	price.SetStrategy(sell50)
+	price.Sell()
+	fmt.Println(price.FinalPrice)
+	
+
+	//State
+	fmt.Println("///////////////////////////////State")
+
+	context := pattern.Context{State: new(pattern.StateA)}
+	context.Request()
+
+	context.SetState(new(pattern.StateB))
+	context.Request()
 }	
