@@ -37,24 +37,31 @@ import (
 Программа должна проходить все тесты. Код должен проходить проверки go vet и golint.
 */
 
-type sortN struct {
-	number int 
+//SortStrs - global type for sorting
+type SortStrs struct {
+	index int
 	str string
 }
 
-func SortNumber(strs []string, isOrder bool) ([]string, error) {
+type sortN struct {
+	number int 
+	str SortStrs
+}
+
+//SortNumber - sorts in ascending or descending order
+func SortNumber(strs []SortStrs, isOrder bool) ([]SortStrs, error) {
 	reg:= regexp.MustCompile(`(^\d+)`)
 
 	var strAccor []sortN
 	var numberStr []string
-	var badStr []string
+	var badStr []SortStrs
 	var num int
 	var err error
 
 	for _, str := range strs {
-		numberStr = reg.FindStringSubmatch(str)
+		numberStr = reg.FindStringSubmatch(str.str)
 		if numberStr == nil {
-			badStr = append(badStr, str)
+			badStr = append(badStr, SortStrs{str.index, str.str})
 			continue
 		} else {
 			num, err = strconv.Atoi(numberStr[0])
@@ -62,7 +69,7 @@ func SortNumber(strs []string, isOrder bool) ([]string, error) {
 				return nil, err
 			}
 		}
-		strAccor = append(strAccor, sortN{ number: num, str: str })
+		strAccor = append(strAccor, sortN{ number: num, str: SortStrs{str.index, str.str} })
 	}
 
 	if isOrder {
@@ -72,10 +79,10 @@ func SortNumber(strs []string, isOrder bool) ([]string, error) {
 	}
 	
 	
-	var result []string
+	var result []SortStrs
 
 	for _, sAccor := range strAccor {
-		result = append(result, sAccor.str)
+		result = append(result, SortStrs{sAccor.str.index, sAccor.str.str})
 	}
 
 	result = append(result, badStr...)
@@ -83,11 +90,11 @@ func SortNumber(strs []string, isOrder bool) ([]string, error) {
 	return result, nil
 }
 
-//removeDuplicates - removes all duplicates in an array 
-func RemoveDuplicates(strs []string) []string {
+//RemoveDuplicates - removes all duplicates in an array 
+func RemoveDuplicates(strs []SortStrs) []SortStrs {
 	mapStr := make(map[string][]int)
 	for i, str := range strs {
-		mapStr[str] = append(mapStr[str], i)
+		mapStr[str.str] = append(mapStr[str.str], i)
 	}
 
 	var idxs []int
@@ -96,19 +103,47 @@ func RemoveDuplicates(strs []string) []string {
 	}
 
 	sort.SliceStable(idxs, func(i, j int) bool { return idxs[i] < idxs[j] })
-	var res []string
+	var res []SortStrs
 
 	for _, val := range idxs {
-		res = append(res, strs[val])
+		res = append(res, SortStrs{strs[val].index, strs[val].str})
 	}
 
 	return res
 }
 
-func PrintString(strs []string) {
+//PrintString - print all strings
+func PrintString(strs []SortStrs) {
 	for _, val := range strs {
-		fmt.Println(val)
+		fmt.Println(val.str)
 	}
+}
+
+//split - get only one column
+func split(strs []SortStrs, col int) ([]SortStrs, []SortStrs) {
+	var res []SortStrs
+	var tempSplit []string
+	var bad []SortStrs
+	for _, val := range strs {
+		tempSplit = strings.Split(val.str, " ")
+		if len(tempSplit) > col {
+			res = append(res, SortStrs{val.index, tempSplit[col]})
+		} else {
+			bad = append(bad, SortStrs{val.index, val.str})
+		}
+	}
+	return res, bad
+}
+
+//sortMatch - match after sorting by column
+func sortMatch(strs []SortStrs, newStr []SortStrs, bad []SortStrs) []SortStrs {
+	var res []SortStrs
+	for _, val := range newStr {
+		res = append(res, strs[val.index])
+	}
+
+	res = append(res, bad...)
+	return res 
 }
 
 func main() {
@@ -116,6 +151,8 @@ func main() {
 	nFlag := flag.Bool("n", false, "sort by numeric value")
 	rFlag := flag.Bool("r", false, "sort in reverse order")
 	uFlag := flag.Bool("u", false,  "do not output duplicate lines")
+	colFlag := flag.Int("k", 0, "sortable column")
+
 	flag.Parse()
 
 	fileName := flag.Arg(0)
@@ -127,31 +164,40 @@ func main() {
 	}
 	defer file.Close()
 
-	var strs []string
+	var strs []SortStrs
 
 	//read file line by line
 	fileScanner := bufio.NewScanner(file)
+	indx := 0
 	for fileScanner.Scan() {
-		strs = append(strs, strings.ToLower(fileScanner.Text()))
+		strs = append(strs, SortStrs{indx, strings.ToLower(fileScanner.Text())})
+		indx++
 	}
 
 	if err := fileScanner.Err(); err != nil {
 		log.Fatal(err)
 	}
 
-	fmt.Println(strs)
-
-	//strs, _ = SortNumber(strs, false)
-
-	if *uFlag {
-		strs = RemoveDuplicates(strs)
+	if *colFlag > 0 { //sorting by column
+		newStr, bad := split(strs, *colFlag)
+		if *nFlag {
+			newStr, err = SortNumber(newStr, !*rFlag)
+			if err != nil {
+				log.Fatal(err)
+			}
+		}
+		strs = sortMatch(strs, newStr, bad)
+	} else {
+		if *nFlag {
+			strs, err = SortNumber(strs, !*rFlag)
+			if err != nil {
+				log.Fatal(err)
+			}
+		}
 	}
 
-	if *nFlag {
-		strs, err = SortNumber(strs, !*rFlag)
-		if err != nil {
-			log.Fatal(err)
-		}
+	if *uFlag { //remove duplicates
+		strs = RemoveDuplicates(strs)
 	}
 
 	PrintString(strs)
